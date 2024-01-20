@@ -39,3 +39,9 @@ python main.py upload --ip <printer_ip> --port <printer_port> <file_path>
 ### Print File
 Start printing a file that has already been uploaded to the printer.
 python main.py print --ip <printer_ip> --port <printer_port> <file_name>
+
+## Credits
+
+This project was derived from work done here [flashforgefinder-protocol](https://github.com/ztripez/flashforgefinder-protocol), though sadly the protocol seems to be a bit different nowadays.
+
+Since I've only tested this on one printer (Guider 2S), I am not sure if these protocol differences are just the protocol evolving over the years, or if there's some printer-specific aspects to this protocol.
