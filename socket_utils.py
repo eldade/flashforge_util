@@ -1,3 +1,5 @@
+import socket
+
 BUFFER_SIZE = 65536
 TIMEOUT_SECONDS = 10
 
@@ -18,11 +20,6 @@ def send_and_receive(printer_adress, message_data):
     printer_socket.connect((printer_adress['ip'], printer_adress['port']))
 
     sent = printer_socket.sendall(message_data)
-    #
-    # if large_data != None:
-    #     new_data = message_data.encode() + large_data.encode()
-    #     sent = printer_socket.send(new_data)
-    #     print (sent)
 
     data = printer_socket.recv(BUFFER_SIZE)
     printer_socket.close()

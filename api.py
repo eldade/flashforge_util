@@ -1,10 +1,10 @@
 
 import socket
-import socket_utils
 import struct
 import re
 import time
 import os
+from socket_utils import *
 
 def retrieve_file_list(address):
     ip = address['ip']
@@ -84,7 +84,6 @@ def get_printer_info(printer_address):
     return info_result.decode()
 
 def get_print_progress(printer_address):
-    # send_and_receive(printer_address, request_control_message)
     info_result = send_and_receive(printer_address, b'~M27\r\n')
 
     regex_groups = re.search('([0-9].*)\/([0-9].*?)\\r', info_result.decode()).groups()
@@ -100,7 +99,6 @@ def get_print_progress(printer_address):
 def get_printer_status(printer_address):
     """ Returns the current printer status. """
 
-    # send_and_receive(printer_address, request_control_message)
     info_result = send_and_receive(printer_address, b'~M119\r\n')
 
     printer_info = {}
@@ -152,13 +150,11 @@ def upload_file(printer_address, filename):
 
 
 def print_file(printer_address, filename):
-    # send_and_receive(printer_address, request_control_message)
     info_result = send_and_receive(printer_address, '~M23 0:/user/{}\r\n'.format(filename).encode())
 
     return info_result
 
 def unload_filament(printer_address):
-    # send_and_receive(printer_address, request_control_message)
     info_result = send_and_receive(printer_address, '~M702 U5\r\n'.encode())
 
     return info_result
