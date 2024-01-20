@@ -1,22 +1,23 @@
 # FlashForge Printer Utility
 
 ## Overview
-This utility provides experimental support for interacting with FlashForge 3D printers. It has been developed and tested with the FlashForge Guider 2S, but it may work with other models. The utility allows users to discover printers on the network, list files available on the printer, check printer status, and upload files for printing.
+This utility provides experimental support for interacting with FlashForge 3D printers over a network (ethernet or WiFi). It has been developed and tested with the FlashForge Guider 2S, but it may work with other models. The utility allows users to discover printers on the network, list files available on the printer, check printer status, upload files for printing, pause, resume and stop prints, etc.
 
 ## Features
 - Discovering printers on the network
 - Listing files stored in the printer's internal storage
 - Checking the printer's current status
-- Uploading files to the printer
+- Uploading files to the printer and starting a print job
+- Managing an active print job: Pause, resume, and cancel
 
 ## Installation
-(Provide instructions on how to install the utility, including any prerequisites or dependencies that need to be installed beforehand.)
+This is a fairly simple python script (tested on python 3.9), with no additional packages required. I tested on macOS though other platforms should work fine.  
 
 ## Usage
 The utility is command-line based and supports the following commands:
 
 ### Discover Printer
-Discover and display information about the printer on the network.
+Discover and display information about the printer on the network. Note that this will currently only discover one printer on the network.
 ```
 python main.py discover
 ```
