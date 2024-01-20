@@ -94,7 +94,7 @@ def main():
 
     elif args.command == 'print':
         upload_file({'ip': args.ip, 'port': args.port}, os.path.expanduser(args.file))
-        print_file({'ip': args.ip, 'port': args.port}, args.file)
+        print_file({'ip': args.ip, 'port': args.port}, os.path.basename(args.file))
         while True:
             progress = get_print_progress({'ip': args.ip, 'port': args.port})
             print(progress)

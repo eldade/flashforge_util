@@ -52,6 +52,16 @@ Start printing a file that has already been uploaded to the printer.
 python main.py print --ip <printer_ip> --port <printer_port> <file_name>
 ```
 
+### Manage Active Print Job
+Stop, pause, and resume an active print job
+
+```
+python main.py pause --ip <printer_ip> --port <printer_port>
+python main.py resume --ip <printer_ip> --port <printer_port>
+python main.py cancel --ip <printer_ip> --port <printer_port>
+```
+
+
 ## Credits
 
 This project was derived from work done here [flashforgefinder-protocol](https://github.com/ztripez/flashforgefinder-protocol), though sadly the protocol seems to be a bit different nowadays.
