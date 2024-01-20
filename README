@@ -17,28 +17,40 @@ The utility is command-line based and supports the following commands:
 
 ### Discover Printer
 Discover and display information about the printer on the network.
-
+```
 python main.py discover
+```
 
 ### Retrieve Printer Information
 Get basic information about the printer, such as model and serial number.
+```
 python main.py info --ip <printer_ip> --port <printer_port>
+```
 
 ### List Files on Printer
 List all files stored on the printer's internal storage.
+```
 python main.py list-files --ip <printer_ip> --port <printer_port>
+```
 
 ### Check Printer Status
 Get the current status of the printer, including if it is currently printing.
+```
 python main.py status --ip <printer_ip> --port <printer_port>
+```
 
 ### Upload File
 Upload a file to the printer without printing it. The file path should be absolute or relative to the current directory.
+```
 python main.py upload --ip <printer_ip> --port <printer_port> <file_path>
+```
 
 ### Print File
 Start printing a file that has already been uploaded to the printer.
+
+```
 python main.py print --ip <printer_ip> --port <printer_port> <file_name>
+```
 
 ## Credits
 
