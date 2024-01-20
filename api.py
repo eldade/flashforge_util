@@ -109,45 +109,70 @@ def get_printer_status(printer_address):
 
     return printer_info
 
-
-
 def upload_file(printer_address, filename):
     with open(filename) as f:
-        file_contents = f.read()
+        lines = f.readlines()
 
-        file_contents = file_contents.encode()
-        length = len(file_contents)
+    # First check filename to ensure it is below 36 characters (on my Guider 2s that causes the uploaded to silently fail):
+    # Note that it LOOKS like they count the length including this prefix, so the actual limit is around 28 characters for the user's filename.
+    length = len('0:/user/{}'.format(os.path.basename(filename)))
 
-        encoded_command = '~M28 {} 0:/user/{}\r\n'.format(length, os.path.basename(filename)).encode()
+    if length > 36:
+        print ("Filenames need to be 28 characters or less. Please shorten your filename and try again.")
+        exit (1)
 
-        printer_socket = socket.socket()
-        printer_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        printer_socket.settimeout(600)
-        printer_socket.connect((printer_address['ip'], printer_address['port']))
+    # The following is a hack to cleanup Cura-generated temperature commands that have a decimal point
+    # in the temperature. Such commands trip up the FF firmware and causes the printer to ignore its temperature setting!
+    print("Processing G-code to correct temperature settings...")
 
-        # Send the M28 command, preparing printer to receive file upload:
-        sent = printer_socket.sendall(encoded_command)
-        # Receive confirmation for M28 command:
-        M28_response = printer_socket.recv(BUFFER_SIZE)
+    # Define the regex pattern for matching temperature commands
+    # This pattern looks for M104, M140, M190, or M109, followed by S and a number (with optional decimal part)
+    pattern = re.compile(r'(M104 S|M140 S|M190 S|M109 S)(\d+)(\.\d+)?')
 
-        print (M28_response)
+    # Process each line to fix temperature set commands
+    processed_lines = []
+    for line in lines:
+        # Replace the matched pattern, removing the decimal part
+        processed_line = pattern.sub(r'\1\2', line)
+        processed_lines.append(processed_line)
 
-        # Upload the file:
+    correction_count = 0
+    for original, processed in zip(lines, processed_lines):
+        if original != processed:
+            correction_count += 1
 
-        send_data_with_progress(printer_socket, file_contents)
+    print ('Corrected {} entries.'.format(correction_count))
 
-        # Sleep a bit -- the file data needs to be in a spearate packet from the M29 packet that follows, and sleeping appears to be one way
-        # to ensure that. Otherwise my Guider 2S never fully completes the upload...
-        time.sleep(0.5)
+    # Combine lines back into a single string and encode
+    file_contents = ''.join(processed_lines).encode()
+    length = len(file_contents)
 
-        # Send M29 packet indicating EOF. The printer should reply to that, confirming that upload has succeeded:
-        printer_socket.sendall(b'~M29\r\n')
-        M29_response = printer_socket.recv(1000)
-        print(M29_response)
+    encoded_command = '~M28 {} 0:/user/{}\r\n'.format(length, os.path.basename(filename)).encode()
 
-        printer_socket.close()
+    printer_socket = socket.socket()
+    printer_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+    printer_socket.settimeout(600)
+    printer_socket.connect((printer_address['ip'], printer_address['port']))
 
+    # Send the M28 command, preparing printer to receive file upload
+    printer_socket.sendall(encoded_command)
+    # Receive confirmation for M28 command
+    M28_response = printer_socket.recv(BUFFER_SIZE)
+    print(M28_response)
 
+    # Upload the file
+    send_data_with_progress(printer_socket, file_contents)
+
+    # Ensure separation of file data and EOF command
+    time.sleep(0.5)
+
+    # Send M29 packet indicating EOF
+    printer_socket.sendall(b'~M29\r\n')
+    M29_response = printer_socket.recv(BUFFER_SIZE)
+    print(M29_response)
+
+    printer_socket.close()
+    print("G-code processed and uploaded successfully.")
 
 def print_file(printer_address, filename):
     info_result = send_and_receive(printer_address, '~M23 0:/user/{}\r\n'.format(filename).encode())
