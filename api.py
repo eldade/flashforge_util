@@ -154,6 +154,18 @@ def print_file(printer_address, filename):
 
     return info_result
 
+def resume_print(printer_address):
+    info_result = send_and_receive(printer_address, '~M24'.encode())
+    return info_result
+
+def pause_print(printer_address):
+    info_result = send_and_receive(printer_address, '~M25'.encode())
+    return info_result
+
+def cancel_print(printer_address):
+    info_result = send_and_receive(printer_address, '~M26'.encode())
+    return info_result
+
 def unload_filament(printer_address):
     info_result = send_and_receive(printer_address, '~M702 U5\r\n'.encode())
 

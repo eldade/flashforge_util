@@ -27,6 +27,15 @@ def main():
     # Subparser for printer status
     status_parser = subparsers.add_parser('status', help='Get printer status')
 
+    # Subparser for resume print command
+    resume_parser = subparsers.add_parser('resume', help='Resume a paused print operation')
+
+    # Subparser for pause print command
+    pause_parser = subparsers.add_parser('pause', help='Pause an active print operation')
+
+    # Subparser for cancel print command
+    cancel_parser = subparsers.add_parser('cancel', help='Stop/cancel an active print operation')
+
     # Subparser for uploading a file
     upload_parser = subparsers.add_parser('upload', help='Upload a file')
     upload_parser.add_argument('file', help='File to upload')
@@ -39,7 +48,7 @@ def main():
     progress_parser = subparsers.add_parser('progress', help='Get print progress')
 
     # Add common arguments
-    for subparser in [info_parser, list_parser, status_parser, upload_parser, print_parser, progress_parser]:
+    for subparser in [info_parser, list_parser, status_parser, resume_parser, pause_parser, cancel_parser, upload_parser, print_parser, progress_parser]:
         subparser.add_argument('--ip', help='IP address of the printer')
         subparser.add_argument('--port', default=8899, type=int, help='Port number of the printer')
 
@@ -54,6 +63,18 @@ def main():
 
     elif args.command == 'info':
         info = get_printer_info({'ip': args.ip, 'port': args.port})
+        print(info)
+
+    elif args.command == 'resume':
+        info = resume_print({'ip': args.ip, 'port': args.port})
+        print(info)
+
+    elif args.command == 'pause':
+        info = pause_print({'ip': args.ip, 'port': args.port})
+        print(info)
+
+    elif args.command == 'cancel':
+        info = cancel_print({'ip': args.ip, 'port': args.port})
         print(info)
 
     elif args.command == 'list-files':
@@ -72,6 +93,7 @@ def main():
         upload_file({'ip': args.ip, 'port': args.port}, os.path.expanduser(args.file))
 
     elif args.command == 'print':
+        upload_file({'ip': args.ip, 'port': args.port}, os.path.expanduser(args.file))
         print_file({'ip': args.ip, 'port': args.port}, args.file)
         while True:
             progress = get_print_progress({'ip': args.ip, 'port': args.port})
