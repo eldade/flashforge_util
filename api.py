@@ -77,6 +77,14 @@ def retrieve_file_list(address):
 
     return file_list
 
+def find_file_on_printer(printer_address, search_filename):
+    file_list = retrieve_file_list(printer_address)
+    for filename in file_list:
+        print (filename)
+        if search_filename in filename:
+            return True, filename
+    return False, None
+
 def get_printer_info(printer_address):
     """ Returns an object with basic printer information such as name etc."""
 
@@ -175,7 +183,7 @@ def upload_file(printer_address, filename):
     print("G-code processed and uploaded successfully.")
 
 def print_file(printer_address, filename):
-    info_result = send_and_receive(printer_address, '~M23 0:/user/{}\r\n'.format(filename).encode())
+    info_result = send_and_receive(printer_address, '~M23 /data/{}\r\n'.format(filename).encode())
 
     return info_result
 
