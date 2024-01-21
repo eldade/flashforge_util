@@ -9,6 +9,7 @@ This utility provides experimental support for interacting with FlashForge 3D pr
 - Checking the printer's current status
 - Uploading files to the printer and starting a print job
 - Managing an active print job: Pause, resume, and cancel
+- Works around the [Cura/Flashforge temperature decimal point bug (https://github.com/Ultimaker/Cura/issues/8657)] by changing all floating point temperature values to integers.
 
 ## Installation
 This is a fairly simple python script (tested on python 3.9), with no additional packages required. I tested on macOS though other platforms should work fine.  
