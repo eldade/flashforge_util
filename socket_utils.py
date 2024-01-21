@@ -1,34 +1,31 @@
 import socket
 
-BUFFER_SIZE = 65536
+BUFFER_SIZE = 4096
 TIMEOUT_SECONDS = 10
 
-def send_bytes(printer_adress, message_data):
+def send_bytes(socket, message_data):
     """Sends and receives data"""
 
+    return socket.send(message_data.encode())
+
+def connect(printer_address):
     printer_socket = socket.socket()
     printer_socket.settimeout(TIMEOUT_SECONDS)
-    printer_socket.connect((printer_adress['ip'], printer_adress['port']))
+    printer_socket.connect((printer_address['ip'], printer_address['port']))
 
-    return printer_socket.send(message_data.encode())
-
-def send_and_receive(printer_adress, message_data):
+    return printer_socket
+def send_and_receive(printer_socket, message_data):
     """Sends and receives data"""
-
-    printer_socket = socket.socket()
-    printer_socket.settimeout(TIMEOUT_SECONDS)
-    printer_socket.connect((printer_adress['ip'], printer_adress['port']))
 
     sent = printer_socket.sendall(message_data)
 
     data = printer_socket.recv(BUFFER_SIZE)
-    printer_socket.close()
 
     return data
 
 def send_data_with_progress(sock, data):
     # Size of each chunk to send
-    chunk_size = 1024  # 1 KB chunks, adjust as needed
+    chunk_size = BUFFER_SIZE  # 1 KB chunks, adjust as needed
 
     # Get the total size of the data for progress calculation
     total_size = len(data)

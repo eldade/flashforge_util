@@ -61,24 +61,30 @@ def main():
         else:
             print("Printer not found.")
 
-    elif args.command == 'info':
-        info = get_printer_info({'ip': args.ip, 'port': args.port})
+    socket = connect({'ip': args.ip, 'port': args.port})
+
+    if socket == None:
+        print ("Failed to connect to printer")
+        exit(1)
+
+    if args.command == 'info':
+        info = get_printer_info(socket)
         print(info)
 
     elif args.command == 'resume':
-        info = resume_print({'ip': args.ip, 'port': args.port})
+        info = resume_print(socket)
         print(info)
 
     elif args.command == 'pause':
-        info = pause_print({'ip': args.ip, 'port': args.port})
+        info = pause_print(socket)
         print(info)
 
     elif args.command == 'cancel':
-        info = cancel_print({'ip': args.ip, 'port': args.port})
+        info = cancel_print(socket)
         print(info)
 
     elif args.command == 'list-files':
-        file_list = retrieve_file_list({'ip': args.ip, 'port': args.port})
+        file_list = retrieve_file_list(socket)
         print("Files on the printer:")
         for file in file_list:
             print(file)
@@ -86,27 +92,35 @@ def main():
         print(f"Total number of files: {len(file_list)}")
 
     elif args.command == 'status':
-        status = get_printer_status({'ip': args.ip, 'port': args.port})
+        status = get_printer_status(socket)
         print(status)
 
     elif args.command == 'upload':
-        upload_file({'ip': args.ip, 'port': args.port}, os.path.expanduser(args.file))
+        upload_file(socket, os.path.expanduser(args.file))
 
     elif args.command == 'print':
-        upload_file({'ip': args.ip, 'port': args.port}, os.path.expanduser(args.file))
-        print_file({'ip': args.ip, 'port': args.port}, os.path.basename(args.file))
+        upload_file(socket, os.path.expanduser(args.file))
+        result = print_file(socket, os.path.basename(args.file))
+        if result == False:
+            time.sleep(5)
+            cancel_print(socket)
+            print ("Upload failed due to unknown reason.")
+            return
+
         while True:
-            progress = get_print_progress({'ip': args.ip, 'port': args.port})
+            progress = get_print_progress(socket)
             print(progress)
-            status = get_printer_status({'ip': args.ip, 'port': args.port})
+            status = get_temperatures(socket)
             print(status)
             time.sleep(5)
 
     elif args.command == 'progress':
         while True:
-            progress = get_print_progress({'ip': args.ip, 'port': args.port})
+            progress = get_print_progress(socket)
             print(progress)
             time.sleep(5)
+
+    socket.close()
 
 if __name__ == "__main__":
     main()
