@@ -12,6 +12,7 @@ def connect(printer_address):
     printer_socket = socket.socket()
     printer_socket.settimeout(TIMEOUT_SECONDS)
     printer_socket.connect((printer_address['ip'], printer_address['port']))
+    printer_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
     return printer_socket
 def send_and_receive(printer_socket, message_data):
@@ -42,6 +43,7 @@ def send_data_with_progress(sock, data):
 
         # Calculate and print the progress
         progress = (bytes_sent / total_size) * 100
-        print(f"Progress: {progress:.2f}%")
+        print("\033[K", end='\r')  # Clear the line
+        print(f"Progress: {progress:.2f}%", end='')
 
-    print("Data transfer complete.")
+    print("\nData transfer complete.")

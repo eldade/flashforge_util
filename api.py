@@ -90,22 +90,26 @@ def get_print_progress(socket):
     printed = regex_groups[0]
     total = regex_groups[1]
 
-    percentage = 0 if total == '0' else int((int(printed) / int(total)) * 100)
+    percentage = 0 if total == '0' else float((float(printed) / float(total)) * 100.0)
 
     return {'BytesPrinted': printed,
             'BytesTotal': total,
             'PercentageCompleted': percentage}
 
 def get_printer_status(socket):
-    """ Returns the current printer status. """
-
     info_result = send_and_receive(socket, b'~M119\r\n')
 
     printer_info = {}
-    printer_info_fields = ['Status', 'MachineStatus', 'MoveMode', 'Endstop']
+    printer_info_fields = ['Status', 'MachineStatus', 'MoveMode', 'Endstop', 'LED', 'CurrentFile']
     for field in printer_info_fields:
         regex_string = field + ': ?(.+?)\\r\\n'
-        printer_info[field] = re.search(regex_string, info_result.decode()).groups()[0]
+        match = re.search(regex_string, info_result.decode())
+
+        if match:
+            printer_info[field] = match.groups()[0]
+        else:
+            # Provide a default value if the field is not found
+            printer_info[field] = None if field == 'CurrentFile' else None
 
     return printer_info
 
@@ -115,18 +119,18 @@ def upload_file(socket, filename):
             lines = f.readlines()
     except FileNotFoundError:
         print(f"Error: The file '{filename}' was not found.")
-        return None
+        return False
     except IOError:
         print(f"Error: An IO error occurred while opening the file '{filename}'.")
-        return None
+        return False
 
     # First check filename to ensure it is below 36 characters (on my Guider 2s that causes the uploaded to silently fail):
     # Note that it LOOKS like they count the length including this prefix, so the actual limit is around 28 characters for the user's filename.
     length = len('0:/user/{}'.format(os.path.basename(filename)))
 
-    if length > 36:
-        print ("Filenames need to be 28 characters or less. Please shorten your filename and try again.")
-        exit (1)
+    if length > 42:
+        print ("Filenames need to be 36 characters or less. Please shorten your filename and try again.")
+        return False
 
     # The following is a hack to cleanup Cura-generated temperature commands that have a decimal point
     # in the temperature. Such commands trip up the FF firmware and causes the printer to ignore its temperature setting!
@@ -175,6 +179,9 @@ def upload_file(socket, filename):
     M29_response = socket.recv(BUFFER_SIZE)
     print(M29_response)
 
+    # TODO: Figure out how to actually determine file upload failures. This thing seems to just respond in the same way even when the file doesn't make it.
+    return True
+
 def print_file(socket, filename):
     response = send_and_receive(socket, '~M23 0:/user/{}\r\n'.format(filename).encode())
 
@@ -210,5 +217,15 @@ def unload_filament(socket):
 def get_temperatures(printer_address):
     info_result = send_and_receive(printer_address, '~M105\r\n'.encode())
 
-    return info_result
+    pattern = re.compile(r'T0:(\d+) /(\d+) B:(\d+)/(\d+)')
+    match = pattern.search(info_result.decode('utf-8'))
+    if match:
+        return {
+            'Extruder_Current': match.group(1),
+            'Extruder_Target': match.group(2),
+            'Platform_Current': match.group(3),
+            'Platform_Target': match.group(4)
+        }
+
+    return None
 

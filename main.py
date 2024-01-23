@@ -4,6 +4,7 @@ import time
 from api import *
 from discover import *
 import sys
+from print_status import *
 
 def main():
 
@@ -27,6 +28,9 @@ def main():
     # Subparser for printer status
     status_parser = subparsers.add_parser('status', help='Get printer status')
 
+    # Subparser for printer status
+    temp_parser = subparsers.add_parser('temperatures', help='Get temperatures of extruder and platform')
+
     # Subparser for resume print command
     resume_parser = subparsers.add_parser('resume', help='Resume a paused print operation')
 
@@ -48,7 +52,7 @@ def main():
     progress_parser = subparsers.add_parser('progress', help='Get print progress')
 
     # Add common arguments
-    for subparser in [info_parser, list_parser, status_parser, resume_parser, pause_parser, cancel_parser, upload_parser, print_parser, progress_parser]:
+    for subparser in [info_parser, list_parser, status_parser, resume_parser, pause_parser, temp_parser, cancel_parser, upload_parser, print_parser, progress_parser]:
         subparser.add_argument('--ip', help='IP address of the printer')
         subparser.add_argument('--port', default=8899, type=int, help='Port number of the printer')
 
@@ -83,6 +87,10 @@ def main():
         info = cancel_print(socket)
         print(info)
 
+    elif args.command == 'temperatures':
+        info = get_temperatures(socket)
+        print(info)
+
     elif args.command == 'list-files':
         file_list = retrieve_file_list(socket)
         print("Files on the printer:")
@@ -99,26 +107,21 @@ def main():
         upload_file(socket, os.path.expanduser(args.file))
 
     elif args.command == 'print':
-        upload_file(socket, os.path.expanduser(args.file))
-        result = print_file(socket, os.path.basename(args.file))
-        if result == False:
-            time.sleep(5)
-            cancel_print(socket)
-            print ("Upload failed due to unknown reason.")
-            return
+        result = upload_file(socket, os.path.expanduser(args.file))
 
-        while True:
-            progress = get_print_progress(socket)
-            print(progress)
-            status = get_temperatures(socket)
-            print(status)
-            time.sleep(5)
+        if result == True:
+            result = print_file(socket, os.path.basename(args.file))
+            if result == True:
+                time.sleep(10)
+                report_print_status(socket)
+            else:
+                print("Upload failed due to unknown reason. Cancelling...")
+                time.sleep(10)
+                cancel_print(socket)
 
     elif args.command == 'progress':
-        while True:
-            progress = get_print_progress(socket)
-            print(progress)
-            time.sleep(5)
+        report_print_status(socket)
+        return
 
     socket.close()
 
