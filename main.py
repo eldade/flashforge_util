@@ -81,6 +81,10 @@ def main():
     if (control == False):
         exit(1)
 
+    printer_info = get_printer_info(socket)
+
+    print (f"Connected to {printer_info['Machine Name']}@{args.ip}, Model={printer_info['Machine Type']} ({printer_info['Firmware']})")
+
     if args.command == 'info':
         info = get_printer_info(socket)
         print(info)

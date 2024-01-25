@@ -80,7 +80,21 @@ def get_printer_info(socket):
     """ Returns an object with basic printer information such as name etc."""
 
     info_result = send_and_receive(socket, b'~M115\r\n')
-    return info_result.decode()
+
+    printer_info = {}
+    printer_info_fields = ['Machine Type', 'Machine Name', 'Firmware', 'SN', 'X', 'Tool Count']
+    for field in printer_info_fields:
+        regex_string = field + ': ?(.+?)\\r\\n'
+        match = re.search(regex_string, info_result.decode())
+
+        if match:
+            printer_info[field] = match.groups()[0]
+        else:
+            # Provide a default value if the field is not found
+            printer_info[field] = None if field == 'CurrentFile' else None
+
+    return printer_info
+
 
 def get_print_progress(socket):
     info_result = send_and_receive(socket, b'~M27\r\n')
@@ -234,7 +248,6 @@ def control_obtain(socket):
     info_result = send_and_receive(socket, '~M601\r\n'.encode())
     socket.settimeout(original_timeout)
     if "Control Success" in info_result.decode():
-        print ("Successfully acquired control of printer")
         return True
 
     print ("Failed to acquired control of printer")

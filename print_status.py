@@ -20,20 +20,20 @@ def get_estimated_remaining_time(start_byte, start_time, current_byte, current_t
 
 def report_print_status(socket):
     start_time = time.time()
-    status = get_printer_status(socket)  # Your function to get printer status
+    status = get_printer_status(socket)
 
-    progress = get_print_progress(socket)  # Your function to get print progress
+    progress = get_print_progress(socket)
     start_byte = int(progress['BytesPrinted'])
 
     while True:
-        status = get_printer_status(socket)  # Your function to get printer status
+        status = get_printer_status(socket)
 
         if status['CurrentFile'] == None:
             print ('No active print job.')
             return
 
-        temperatures = get_temperatures(socket)  # Your function to get temperatures
-        progress = get_print_progress(socket)  # Your function to get print progress
+        temperatures = get_temperatures(socket)
+        progress = get_print_progress(socket)
 
         remaining_time = get_estimated_remaining_time(start_byte, start_time, int(progress['BytesPrinted']), time.time(), int(progress['BytesTotal']))
 
