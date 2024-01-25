@@ -1,7 +1,7 @@
 import socket
 
-BUFFER_SIZE = 4096
-TIMEOUT_SECONDS = 10
+BUFFER_SIZE = 16384
+TIMEOUT_SECONDS = 30
 
 def send_bytes(socket, message_data):
     """Sends and receives data"""

@@ -2,9 +2,12 @@ import argparse
 import os
 import time
 from api import *
+import signal
 from discover import *
 import sys
 from print_status import *
+
+socket = None
 
 def main():
 
@@ -65,10 +68,17 @@ def main():
         else:
             print("Printer not found.")
 
+    global socket
+
     socket = connect({'ip': args.ip, 'port': args.port})
 
     if socket == None:
         print ("Failed to connect to printer")
+        exit(1)
+
+    control = control_obtain(socket)
+
+    if (control == False):
         exit(1)
 
     if args.command == 'info':
@@ -110,20 +120,39 @@ def main():
         result = upload_file(socket, os.path.expanduser(args.file))
 
         if result == True:
-            result = print_file(socket, os.path.basename(args.file))
-            if result == True:
-                time.sleep(10)
-                report_print_status(socket)
+            # I am seeing some fairly unpredictable behaviors with the file upload, and no clear way to extract an
+            # error code from the request. One reliable way I've found to confirm my upload worked is to grab the file list
+            # afterwards and ensure the file is available on the printer...
+            upload_found = find_file_on_printer(socket, os.path.basename(args.file))
+
+            if upload_found[0] == True:
+                result = print_file(socket, os.path.basename(args.file))
+                if result == True:
+                    time.sleep(10)
+                    report_print_status(socket)
             else:
                 print("Upload failed due to unknown reason. Cancelling...")
-                time.sleep(10)
-                cancel_print(socket)
 
     elif args.command == 'progress':
         report_print_status(socket)
-        return
 
+    control_release(socket)
     socket.close()
 
-if __name__ == "__main__":
+def exit_gracefully(signum, frame):
+    # restore the original signal handler as otherwise evil things will happen
+    # in raw_input when CTRL+C is pressed, and our signal handler is not re-entrant
+    signal.signal(signal.SIGINT, original_sigint)
+
+    print ("\n")
+
+    control_release(socket)
+    socket.close()
+    sys.exit(1)
+
+
+if __name__ == '__main__':
+    # store the original SIGINT handler
+    original_sigint = signal.getsignal(signal.SIGINT)
+    signal.signal(signal.SIGINT, exit_gracefully)
     main()

@@ -4,7 +4,7 @@ import os
 from api import *
 
 def get_estimated_remaining_time(start_byte, start_time, current_byte, current_time, total_bytes):
-    if start_byte == 0 or current_byte == start_byte:
+    if current_byte == start_byte:
         # No progress made or still at the initial byte, cannot estimate time
         return None
 

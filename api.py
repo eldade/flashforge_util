@@ -72,7 +72,6 @@ def retrieve_file_list(socket):
 def find_file_on_printer(socket, search_filename):
     file_list = retrieve_file_list(socket)
     for filename in file_list:
-        print (filename)
         if search_filename in filename:
             return True, filename
     return False, None
@@ -177,7 +176,6 @@ def upload_file(socket, filename):
     # Send M29 packet indicating EOF
     socket.sendall(b'~M29\r\n')
     M29_response = socket.recv(BUFFER_SIZE)
-    print(M29_response)
 
     # TODO: Figure out how to actually determine file upload failures. This thing seems to just respond in the same way even when the file doesn't make it.
     return True
@@ -214,8 +212,8 @@ def unload_filament(socket):
     return info_result
 
 
-def get_temperatures(printer_address):
-    info_result = send_and_receive(printer_address, '~M105\r\n'.encode())
+def get_temperatures(socket):
+    info_result = send_and_receive(socket, '~M105\r\n'.encode())
 
     pattern = re.compile(r'T0:(\d+) /(\d+) B:(\d+)/(\d+)')
     match = pattern.search(info_result.decode('utf-8'))
@@ -229,3 +227,23 @@ def get_temperatures(printer_address):
 
     return None
 
+def control_obtain(socket):
+    # This command "grabs" the printer
+    original_timeout = socket.gettimeout()
+    socket.settimeout(3)
+    info_result = send_and_receive(socket, '~M601\r\n'.encode())
+    socket.settimeout(original_timeout)
+    if "Control Success" in info_result.decode():
+        print ("Successfully acquired control of printer")
+        return True
+
+    print ("Failed to acquired control of printer")
+    return False
+
+def control_release(socket):
+    # This command "releases" the printer from the connection, allowing other FlashPrint to connect to it:
+    info_result = send_and_receive(socket, '~M602\r\n'.encode())
+    if "Control Release" in info_result.decode():
+        print ("Successfully released control of printer")
+
+    return
